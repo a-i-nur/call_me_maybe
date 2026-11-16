@@ -20,5 +20,10 @@ dev = [
 llm-sdk = { path = "llm_sdk" }
 
 [tool.mypy]
+mypy_path = "llm_sdk"
 exclude = ['^llm_sdk/', '^examples/', '^docs/', '^\.venv/']
 plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = "llm_sdk"
+follow_imports = "skip"
