@@ -1,0 +1,24 @@
+[project]
+name = "call-me-maybe"
+version = "0.1.0"
+description = "Constrained function-calling CLI"
+requires-python = ">=3.10"
+dependencies = [
+    "accelerate>=1.10.0",
+    "llm-sdk",
+    "numpy>=1.26.0",
+    "pydantic>=2.10.0",
+]
+
+[dependency-groups]
+dev = [
+    "flake8>=7.1.0",
+    "mypy>=1.13.0",
+]
+
+[tool.uv.sources]
+llm-sdk = { path = "llm_sdk" }
+
+[tool.mypy]
+exclude = ['^llm_sdk/', '^examples/', '^docs/', '^\.venv/']
+plugins = ["pydantic.mypy"]
