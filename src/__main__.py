@@ -10,6 +10,10 @@ from typing import Sequence
 from pydantic import ValidationError
 
 from src.io import InputError, load_catalog, load_requests, write_json_atomic
+from src.arguments import extract_arguments
+from src.selector import select_function
+from src.sdk import load_model, token_texts
+from src.validation import check_stage_two, validate_call
 
 
 DEFAULT_FUNCTIONS = Path("data/input/functions_definition.json")
@@ -44,15 +48,22 @@ def build_parser() -> argparse.ArgumentParser:
 
 
 def run(arguments: argparse.Namespace) -> None:
-    """Validate inputs and process the stage-one empty-batch case."""
-    load_catalog(arguments.functions_definition)
+    """Validate inputs, generate a complete batch, and publish it atomically."""
+    catalog = load_catalog(arguments.functions_definition)
     requests = load_requests(arguments.input)
-    if requests.root:
-        raise InputError(
-            "non-empty input cannot be processed yet: selector and decoder "
-            "are not implemented; no new result was written"
-        )
-    write_json_atomic(arguments.output, [])
+    if not requests.root:
+        write_json_atomic(arguments.output, [])
+        return
+    check_stage_two(catalog)
+    model = load_model()
+    vocabulary = token_texts(model)
+    results = []
+    for request in requests.root:
+        definition = select_function(model, catalog, request.prompt, vocabulary)
+        parameters = extract_arguments(model, definition, request.prompt, vocabulary)
+        result = validate_call(request.prompt, definition, parameters)
+        results.append(result.model_dump())
+    write_json_atomic(arguments.output, results)
 
 
 def main(argv: Sequence[str] | None = None) -> int:
@@ -61,8 +72,8 @@ def main(argv: Sequence[str] | None = None) -> int:
     arguments = parser.parse_args(argv)
     try:
         run(arguments)
-    except (InputError, ValidationError) as error:
-        print(f"error: {error}", file=sys.stderr)
+    except (InputError, ValidationError, ValueError, OverflowError) as error:
+        print(f"error: {error}; no new result was published", file=sys.stderr)
         return 1
     return 0
 
