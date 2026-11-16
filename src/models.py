@@ -104,6 +104,16 @@ class InputBatch(RootModel[list[InputRequest]]):
     """Represent an ordered batch of prompts."""
 
 
+class FunctionCall(BaseModel):
+    """Hold the exact output envelope after definition-specific validation."""
+
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    prompt: str
+    name: str
+    parameters: dict[str, Any]
+
+
 def enum_value_matches(value_type: ValueType, value: Any) -> bool:
     """Return whether one JSON enum value matches the supported declared type."""
     if value_type == "string":
