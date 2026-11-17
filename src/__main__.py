@@ -13,7 +13,7 @@ from src.io import InputError, load_catalog, load_requests, write_json_atomic
 from src.arguments import extract_arguments
 from src.selector import select_function
 from src.sdk import load_model, token_texts
-from src.validation import check_stage_two, validate_call
+from src.validation import validate_call
 
 
 DEFAULT_FUNCTIONS = Path("data/input/functions_definition.json")
@@ -54,7 +54,6 @@ def run(arguments: argparse.Namespace) -> None:
     if not requests.root:
         write_json_atomic(arguments.output, [])
         return
-    check_stage_two(catalog)
     model = load_model()
     vocabulary = token_texts(model)
     results = []
