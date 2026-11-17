@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 import json
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Mapping
 
 from src.decoding import generate
 from src.grammar import choices_grammar
@@ -27,7 +27,7 @@ def select_function(
     model: Small_LLM_Model,
     catalog: FunctionCatalog,
     request: str,
-    vocabulary: dict[int, str],
+    vocabulary: Mapping[int, str | bytes],
 ) -> FunctionDefinition:
     """Let constrained model logits choose a JSON name or null for no match."""
     choices = [json.dumps(item.name) for item in catalog.root] + ["null"]
@@ -36,10 +36,9 @@ def select_function(
         ensure_ascii=False,
     )
     prompt = chat_prompt(
-        "Select the function that performs the user's requested operation. "
-        "Return only its exact name as a JSON string. "
-        "Return null if none of the available functions can perform it. "
-        "Do not execute the function or answer the request.",
+        "Identify which listed function best fulfills the request. "
+        "If none is applicable, return null. Return only one exact function "
+        "name as a JSON string, or null.",
         content,
     )
     name = json.loads(generate(model, prompt, choices_grammar(choices), vocabulary))
