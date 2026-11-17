@@ -117,11 +117,16 @@ class FunctionCall(BaseModel):
 def enum_value_matches(value_type: ValueType, value: Any) -> bool:
     """Return whether one JSON enum value matches the supported declared type."""
     if value_type == "string":
-        return type(value) is str
+        return type(value) is str and not any(
+            0xD800 <= ord(character) <= 0xDFFF for character in value
+        )
     if value_type == "boolean":
         return type(value) is bool
     if value_type == "integer":
         return type(value) is int
     if type(value) not in (int, float):
         return False
-    return math.isfinite(value)
+    try:
+        return math.isfinite(value)
+    except OverflowError:
+        return False
