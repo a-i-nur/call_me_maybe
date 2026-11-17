@@ -1,4 +1,4 @@
-"""Public SDK access and a conservative token-text vocabulary."""
+"""Public SDK access and lossless ByteLevel token bytes."""
 
 from __future__ import annotations
 
@@ -21,29 +21,37 @@ def load_model() -> Small_LLM_Model:
         raise InputError(f"cannot load SDK model: {error}") from error
 
 
-def token_texts(model: Small_LLM_Model) -> dict[int, str]:
-    """Decode base vocabulary IDs through the public SDK, excluding lossy text.
+def byte_alphabet() -> dict[str, int]:
+    """Reconstruct the reversible alphabet used by ByteLevel tokenizers."""
+    visible = list(range(33, 127)) + list(range(161, 173)) + list(range(174, 256))
+    byte_values = visible + [value for value in range(256) if value not in visible]
+    symbols = visible + list(range(256, 256 + 256 - len(visible)))
+    return {chr(symbol): value for value, symbol in zip(byte_values, symbols)}
 
-    Partial UTF-8 tokens decode to replacement characters in isolation. Until
-    byte-aware transitions are implemented, exclude these rather than corrupt
-    text. Complete Unicode tokens and JSON Unicode escapes remain available.
-    Special tokens are absent from the base vocabulary or decode to empty text.
-    """
+
+def token_texts(model: Small_LLM_Model) -> dict[int, str | bytes]:
+    """Read public tokenizer data and recover bytes, including UTF-8 fragments."""
     try:
-        with open(model.get_path_to_vocab_file(), encoding="utf-8") as source:
-            vocabulary = json.load(source)
+        with open(model.get_path_to_tokenizer_file(), encoding="utf-8") as source:
+            tokenizer = json.load(source)
+        if tokenizer.get("decoder", {}).get("type") != "ByteLevel":
+            raise ValueError("expected a ByteLevel tokenizer decoder")
+        vocabulary = tokenizer["model"]["vocab"]
         if not isinstance(vocabulary, dict) or any(
             type(token_id) is not int or token_id < 0
             for token_id in vocabulary.values()
         ):
             raise ValueError("expected a token-to-integer vocabulary")
-        texts: dict[int, str] = {}
-        for token_id in sorted(set(vocabulary.values())):
-            text = model.decode([token_id])
-            if text and "\ufffd" not in text:
-                texts[token_id] = text
+        alphabet = byte_alphabet()
+        texts: dict[int, str | bytes] = {}
+        for token, token_id in vocabulary.items():
+            fragment = bytes(alphabet[character] for character in token)
+            try:
+                texts[token_id] = fragment.decode("utf-8")
+            except UnicodeDecodeError:
+                texts[token_id] = fragment
         if not texts:
-            raise ValueError("no losslessly decoded tokens")
+            raise ValueError("empty tokenizer vocabulary")
         return texts
     except Exception as error:
         raise InputError(f"cannot read SDK token vocabulary: {error}") from error
