@@ -41,7 +41,8 @@ def load_json(path: Path) -> Any:
                 object_pairs_hook=unique_object,
                 parse_constant=reject_constant,
             )
-    except (OSError, UnicodeError, json.JSONDecodeError, ValueError) as error:
+    except (OSError, UnicodeError, json.JSONDecodeError, ValueError,
+            RecursionError) as error:
         raise InputError(f"cannot read valid JSON from {path}: {error}") from error
 
 
