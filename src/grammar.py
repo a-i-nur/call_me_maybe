@@ -193,8 +193,11 @@ def advance_bytes(
         except UnicodeDecodeError as error:
             if error.reason == "unexpected end of data" and len(pending) < 4:
                 if (character_state not in grammar.string_states
-                        and not any(ord(character) >= 128 for character in
-                                    grammar.transitions[character_state])):
+                        and not any(
+                            character.encode("utf-8").startswith(pending)
+                            for character in grammar.transitions[character_state]
+                            if ord(character) >= 128
+                        )):
                     return None
                 continue
             return None
