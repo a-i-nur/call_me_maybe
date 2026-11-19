@@ -40,9 +40,8 @@ def select_function(
         {"functions": functions, "request": request}, ensure_ascii=False
     )
     prompt = chat_prompt(
-        "Identify which listed function best fulfills the request. "
-        "If none is applicable, return null. Return only one exact function "
-        "name as a JSON string, or null.",
+        "Choose the listed function that fulfills the request. If none applies, "
+        "return null. Return only its exact name as a JSON string, or null.",
         content,
     )
     name = json.loads(generate(model, prompt, choices_grammar(choices), vocabulary))
