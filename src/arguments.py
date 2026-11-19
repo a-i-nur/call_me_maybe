@@ -32,12 +32,13 @@ def extract_arguments(
     prompt = chat_prompt(
         f"Function: {definition.name}({parameters})\n"
         f"Purpose: {definition.description}\n"
-        "Return a JSON object containing only the inputs needed to call this "
-        "function for the user. Extract the operands from the request; the "
-        "request itself is not an operand. Do not execute the function. "
-        "Decode JSON string literals and preserve their values. Copy numeric "
-        "literals exactly, including all digits and exponents; do not round "
-        "or shorten them.",
+        "Return only a JSON object of inputs for this function. Extract values "
+        "from the request; do not execute the function or use the whole request "
+        "as an input. Preserve quoted text, escape sequences, and literal "
+        "replacement words or symbols. If an input is a regular expression, "
+        "translate the described match into regex syntax, including character "
+        "classes, quantifiers, or boundaries when needed. Copy numeric literals "
+        "exactly, including all digits and exponents.",
         request,
     )
     text = generate(model, prompt, arguments_grammar(definition), vocabulary)
