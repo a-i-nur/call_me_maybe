@@ -31,9 +31,13 @@ def select_function(
 ) -> FunctionDefinition:
     """Let constrained model logits choose a JSON name or null for no match."""
     choices = [json.dumps(item.name) for item in catalog.root] + ["null"]
+    functions = [
+        {"name": item.name, "description": item.description,
+         "parameters": list(item.parameters)}
+        for item in catalog.root
+    ]
     content = json.dumps(
-        {"functions": catalog.model_dump(exclude_none=True), "request": request},
-        ensure_ascii=False,
+        {"functions": functions, "request": request}, ensure_ascii=False
     )
     prompt = chat_prompt(
         "Identify which listed function best fulfills the request. "
