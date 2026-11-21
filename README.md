@@ -29,10 +29,13 @@ to the local Hugging Face cache; subsequent runs reuse the cached files.
 Available `Makefile` targets:
 
 - `make install` — install project dependencies via `uv sync`
+- `make install-school` — install into `/goinfre/$USER/call-me-maybe`
 - `make run` — run the program with default input and output paths
 - `make debug` — run the program under Python's built-in `pdb` debugger
 - `make clean` — remove Python/linter caches and generated output
+- `make clean-school` — remove the school environment and uv/Python/Hugging Face downloads from goinfre
 - `make lint` — run `flake8 .` and `mypy .` with the required subject flags
+- `make lint-strict` — run `flake8 .` and the optional `mypy . --strict`
 
 ## Example usage
 
