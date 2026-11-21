@@ -127,9 +127,10 @@ Example output entry in `data/output/function_calls.json`:
 - **Accuracy:** Consistently achieves >90% accuracy on function selection and
   argument extraction (100% on the default 11-prompt test suite).
 - **Execution speed:** Processes the full batch of test prompts in ~35–45
-  seconds on a laptop GPU (RTX 4060) and ~4–4.5 minutes on CPU (8 threads),
-  staying within the 5-minute threshold. Per-state mask caching and
-  first-character token indexing avoid rescanning the full 151,936-token
+  seconds on a laptop GPU (RTX 4060). At 42 Heilbronn, the i7-13700 CPU
+  (8 threads) processed all 11 public prompts in 118 seconds, including the
+  initial model download, staying within the 5-minute threshold. Per-state mask
+  caching and first-character token indexing avoid rescanning the full 151,936-token
   vocabulary on every step.
 
 ## Challenges faced
